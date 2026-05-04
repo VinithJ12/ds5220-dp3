@@ -1,0 +1,21 @@
+# virtual environment
+venv/
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+
+# environment variables / secrets
+.env
+*.env
+
+# local test data files
+*.json
+!package.json
+
+# AWS Chalice deployed config
+.chalice/deployed/
+
+# OS files
+.DS_Store
