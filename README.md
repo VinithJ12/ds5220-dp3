@@ -140,3 +140,82 @@ actual vs predicted water levels and surge over the last 48 hours.
   "response": "https://surgewatch-ds5220.s3.amazonaws.com/latest.png"
 }
 ```
+
+## Key Concepts & Glossary
+
+### Domain Terms
+| Term | Definition |
+|---|---|
+| **Storm Surge** | The difference between actual and predicted water levels, caused by meteorological forces like wind and pressure systems |
+| **MLLW** | Mean Lower Low Water — the tidal datum (baseline) NOAA uses to measure water levels |
+| **Tidal Prediction** | Water level forecast computed from astronomical models — moon position, sun position, Earth's rotation |
+| **Semidiurnal Tide** | Two high tides and two low tides per day — what NYC experiences |
+| **The Battery** | A famous tide gauge at the southern tip of Manhattan, recording data since 1920 |
+
+### AWS Terms
+| Term | Definition |
+|---|---|
+| **Lambda** | Serverless compute — runs your code without managing servers |
+| **EventBridge** | AWS scheduler — triggers Lambda functions on a time-based cadence |
+| **DynamoDB** | NoSQL database — stores timestamped records with partition + sort keys |
+| **S3** | Object storage — hosts static files like the plot PNG publicly |
+| **API Gateway** | Managed HTTP router — exposes Lambda functions as REST endpoints |
+| **IAM** | Identity and Access Management — controls which AWS services can talk to each other |
+| **CloudWatch** | AWS logging and monitoring — stores all Lambda logs |
+| **Chalice** | Python framework that simplifies deploying Lambda + API Gateway together |
+| **Serverless** | Architecture where you run code without provisioning or managing servers — AWS handles infrastructure |
+
+
+
+## Future Directions
+
+- **Multi-station tracking** — Add Sandy Hook (Station 8531680) to compare 
+  surge levels between open ocean and protected harbor. Sandy Hook sits more 
+  exposed to the Atlantic and typically shows surge signals earlier than 
+  The Battery.
+
+- **Anomaly detection** — Add a `/alerts` endpoint that flags readings where 
+  surge exceeds 2 standard deviations from the 30-day mean — an automatic 
+  early warning system for abnormal water levels.
+
+- **Parameterized plot windows** — Add `/plot/24h`, `/plot/7d`, `/plot/30d` 
+  endpoints so users can request different time windows instead of always 
+  seeing 48 hours.
+
+- **Barometric pressure correlation** — NOAA's Battery station also collects 
+  barometric pressure data. Correlating pressure drops with surge spikes 
+  could reveal predictive relationships useful for flood forecasting.
+
+- **Static frontend** — A simple `index.html` hosted on S3 that calls the 
+  API and renders the live plot and current surge value — no Discord required.
+
+- **Long-term sea level trend** — After months of data collection, apply 
+  linear regression to detect whether mean water levels are rising — a 
+  direct climate change signal.
+
+## Setup & Deployment
+
+### Prerequisites
+- Python 3.12+
+- AWS CLI configured with appropriate IAM permissions
+- Chalice (`pip install chalice`)
+
+### Ingestion Pipeline
+```bash
+cd ingestion
+pip install -r requirements.txt
+# Deploy Lambda + EventBridge
+zip -r deployment.zip .
+aws s3 cp deployment.zip s3://surgewatch-ds5220/
+aws lambda update-function-code \
+  --function-name surgewatch-ingest \
+  --s3-bucket surgewatch-ds5220 \
+  --s3-key deployment.zip
+```
+
+### Chalice API
+```bash
+cd integration/surgewatch-api
+pip install chalice
+chalice deploy
+```
